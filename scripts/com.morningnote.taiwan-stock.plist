@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  範例 launchd LaunchAgent:每日 07:00 觸發台股晨訊腳本。
+
+  注意:
+  - Hour/Minute 是「系統本地時間」,不是時區感知的設定。此範例假設
+    這台 Mac 的系統時區已設為 Asia/Taipei;若不是,請自行換算成對應的
+    本地時間(例如系統時區為 UTC 時,07:00 台北時間 = 前一日 23:00 UTC,
+    Day 需自行處理跨日問題,建議直接把系統時區設為 Asia/Taipei 較單純)。
+  - 下面兩個路徑(WorkingDirectory / ProgramArguments 裡的腳本路徑)
+    請換成你實際 clone 這個 repo 的絕對路徑,不要留成 REPLACE_WITH_REPO_PATH。
+  - ANTHROPIC_API_KEY 不放在這個檔案裡,由 run_morning_note.sh
+    讀取 ~/.config/morningnote/env(不受版本控管)。
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.morningnote.taiwan-stock</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>REPLACE_WITH_REPO_PATH/scripts/run_morning_note.sh</string>
+  </array>
+
+  <key>WorkingDirectory</key>
+  <string>REPLACE_WITH_REPO_PATH/scripts</string>
+
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Hour</key>
+    <integer>7</integer>
+    <key>Minute</key>
+    <integer>0</integer>
+  </dict>
+
+  <key>RunAtLoad</key>
+  <false/>
+
+  <key>StandardOutPath</key>
+  <string>/tmp/morningnote.out.log</string>
+
+  <key>StandardErrorPath</key>
+  <string>/tmp/morningnote.err.log</string>
+</dict>
+</plist>

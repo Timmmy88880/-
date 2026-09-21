@@ -8,6 +8,8 @@
 - [`scripts/morning_note_prompt.md`](scripts/morning_note_prompt.md) — 系統提示的純文字版本,供 `scripts/morning_note.py` 讀取後做字串替換,內容與上者同步。
 - [`scripts/morning_note.py`](scripts/morning_note.py) — macOS `launchd` 自動化腳本:每日 07:00(Asia/Taipei)從證交所/櫃買 OpenAPI 抓自選股重訊、呼叫 Claude(含網路搜尋)產出晨訊、存成 `~/MorningNote/YYYY-MM-DD.md` 並跳出 macOS 通知。腳本內建自選股清單(依族群分組)、`TOP_N`、`INCLUDE_OVERSEAS` 等設定。
 - [`scripts/requirements.txt`](scripts/requirements.txt) — 執行腳本所需的 Python 套件。
+- [`scripts/run_morning_note.sh`](scripts/run_morning_note.sh) — launchd 的實際執行入口,負責載入本機環境變數(`ANTHROPIC_API_KEY`)後呼叫 `morning_note.py`。
+- [`scripts/com.morningnote.taiwan-stock.plist`](scripts/com.morningnote.taiwan-stock.plist) — 範例 launchd LaunchAgent,設定每日 07:00 觸發。
 
 ## 使用方式(手動)
 
@@ -21,10 +23,20 @@
 ## 使用方式(自動化腳本)
 
 1. `pip install -r scripts/requirements.txt`
-2. 設定環境變數 `ANTHROPIC_API_KEY`。
+2. 建立 `~/.config/morningnote/env`(此路徑不受版本控管,金鑰不會進 repo),內容例如:
+   ```bash
+   export ANTHROPIC_API_KEY="sk-ant-..."
+   ```
 3. 先執行 `python3 scripts/morning_note.py --check-mops`,確認證交所/櫃買 OpenAPI 目前的欄位名稱與自選股清單能正確比對(腳本文件本身註明尚未在實機測試過)。
-4. 確認無誤後,用 macOS `launchd` 設定每日 07:00(Asia/Taipei)執行 `python3 scripts/morning_note.py`(需自行建立對應的 `.plist`,本 repo 未附範例)。
-5. 產出結果會寫入 `~/MorningNote/YYYY-MM-DD.md`,並跳出 macOS 通知告知成功或失敗。
+4. 確認無誤後,設定排程:
+   - `chmod +x scripts/run_morning_note.sh`
+   - 複製 `scripts/com.morningnote.taiwan-stock.plist`,把裡面兩處 `REPLACE_WITH_REPO_PATH` 換成這個 repo 在你 Mac 上的實際絕對路徑。
+   - 放到 `~/Library/LaunchAgents/com.morningnote.taiwan-stock.plist`。
+   - `launchctl load ~/Library/LaunchAgents/com.morningnote.taiwan-stock.plist`
+   - 想立即測試可執行:`launchctl start com.morningnote.taiwan-stock`
+5. 產出結果會寫入 `~/MorningNote/YYYY-MM-DD.md`,並跳出 macOS 通知告知成功或失敗;執行 log 在 `/tmp/morningnote.out.log`、`/tmp/morningnote.err.log`。
+
+**注意**:plist 的 `Hour: 7` 是系統本地時間,不是時區感知設定。此範例假設 Mac 系統時區已是 Asia/Taipei;若不是,需自行換算對應的本地觸發時間,或先把系統時區改為 Asia/Taipei。
 
 ## 資料來源
 
